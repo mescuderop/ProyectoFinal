@@ -56,7 +56,7 @@ class AccountTypeControllerTest {
 
     @BeforeEach
     public void setUp(){
-        accountTypeDto = new AccountTypeDto("1", "CUENTA CORRIENTE 2");
+        accountTypeDto = new AccountTypeDto("1", "CUENTA CORRIENTE 3");
         BDDMockito.when(repository.getAll())
                 .thenReturn(Flux.just(accountTypeDto));
 

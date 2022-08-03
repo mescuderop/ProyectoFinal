@@ -1,8 +1,8 @@
-package com.bank.initial.application.rest;
+package com.bank.passive.application.rest;
 
-import com.bank.initial.domain.entities.PersonDto;
-import com.bank.initial.domain.services.PersonService;
-import com.bank.initial.infraestructure.repositories.PersonRepository;
+import com.bank.passive.domain.entities.PassiveAccountDto;
+import com.bank.passive.domain.services.PassiveAccountService;
+import com.bank.passive.infraestructure.repositories.PassiveAccountRepository;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.BDDMockito;
@@ -12,27 +12,31 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.web.reactive.function.BodyInserters;
 import reactor.blockhound.BlockHound;
 import reactor.blockhound.BlockingOperationError;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
-
+import org.springframework.http.MediaType;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 
 @ExtendWith(SpringExtension.class)
 @WebFluxTest
-@Import(PersonService.class)
-class PersonControllerTest {
+@Import(PassiveAccountService.class)
+class PassiveAccountControllerTest {
 
     @MockBean
-    private PersonRepository repository;
+    private PassiveAccountRepository repository;
 
     @Autowired
     private WebTestClient client;
 
-    private PersonDto personDto;
+    private PassiveAccountDto passiveAccountDto;
 
     @BeforeAll
     public static void blockHoundSetup() {
@@ -41,9 +45,9 @@ class PersonControllerTest {
 
     @BeforeEach
     public void setUp() {
-        personDto= new PersonDto("1", "MARIELLA","ESCUDERO","25696523","DNI","NATURAL","AV. JOSE GRANDA","MARIELLA@GMAIL.COM","985698569");
-        BDDMockito.when(repository.getAll())
-                .thenReturn(Flux.just(personDto));
+        passiveAccountDto= new PassiveAccountDto("25", "123456789","25698563","1", "CUENTA CORRIENTE",Double.parseDouble("1"),1,"2022-05-20",Double.parseDouble("100"));
+        BDDMockito.when(repository.savePassiveAccount(Mono.just(passiveAccountDto)))
+                .thenReturn(Mono.just(passiveAccountDto));
     }
 
     @Test
@@ -62,20 +66,17 @@ class PersonControllerTest {
         }
     }
 
+
     @Test
-    @DisplayName("GetAll returns a flux of person")
-    public void getAll() {
-        client
-                .get()
-                .uri("/api/person/getAll")
+    @DisplayName("Creating a account")
+    void createPassiveAccount() {
+        client.post()
+                .uri("/api/passive/create")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(BodyInserters.fromValue(Mono.just(passiveAccountDto)))
                 .exchange()
-                .expectStatus().is2xxSuccessful()
-                .expectBody()
-                .jsonPath("1").isEqualTo(personDto.getId())
-                .jsonPath("MARIELLA").isEqualTo(personDto.getName())
-                .jsonPath("ESCUDERO").isEqualTo(personDto.getLastName());
+                .expectStatus().isCreated()
+                .expectBody(PassiveAccountDto.class)
+                .isEqualTo(passiveAccountDto);
     }
-
-
-
 }
